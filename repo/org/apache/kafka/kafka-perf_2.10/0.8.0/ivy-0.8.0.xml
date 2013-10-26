@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
-	<info organisation="org.apache.kafka" module="kafka-perf_2.10" revision="0.8.0" status="release" publication="20131026150607">
+	<info organisation="org.apache.kafka" module="kafka-perf_2.10" revision="0.8.0" status="release" publication="20131026151304">
 		<description>
 		kafka-perf
 		</description>
