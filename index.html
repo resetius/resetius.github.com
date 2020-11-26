@@ -6,6 +6,7 @@ var dt=0.01;
 var T=8;
 var G=2.92e-6;
 var Stop=false;
+var Zoom=50.0;
 
 var body=[
    //x(0)y(1)     z(2)vx(3) vy(4)vz(5)mass(6)fixed(7)
@@ -96,13 +97,15 @@ function draw(w, h) {
         el = document.getElementById("input_"+i+"_7");
         el.checked = body[i][7];
     }
+    el = document.getElementById("zoom");
+    Zoom = parseFloat(el.value);
 
     ctx.beginPath();
     ctx.clearRect(0, 0, w, h);
     for (var i = 0; i < body.length; ++i) {
         // assume w = h
-        var x = body[i][0]*w/20.0 + w/2.0;
-        var y = body[i][1]*w/20.0 + w/2.0;
+        var x = body[i][0]*w/Zoom + w/2.0;
+        var y = body[i][1]*w/Zoom + w/2.0;
         ctx.moveTo(x, y);
         ctx.arc(x, y, 1, 0, 2*Math.PI, false);
     }
@@ -159,18 +162,22 @@ function doall() {
         el = document.createElement("br");
         inputs.appendChild(el);
     }
+
+    el = document.getElementById("zoom");
+    el.value = Zoom;
 }
 
         </script>
     </head>
     <body onload="doall();">
         <div style="float:left">
-            <canvas id="canvas" width="600" height="600" style="border: 1px solid"></canvas>
+            <canvas id="canvas" width="700" height="700" style="border: 1px solid"></canvas>
         </div>
         <div>
             <form name="params">
                 x;y;z;vx;vy;vz;mass;fixed?
-                <div id="inputs"></div>
+                <div id="inputs"></div><br/>
+                zoom: <input id="zoom"/>
                 <input type="button" value="start" onclick="start()"/>
                 <input type="button" value="stop" onclick="stop()"/>
             </form>
