@@ -1,113 +1,179 @@
----
-layout: simple
----
+<html>
+    <head>
+        <script>
 
-<div class="home">
+var dt=0.01;
+var T=8;
+var G=2.92e-6;
+var Stop=false;
 
-<img src="img/kat_001.jpg"/>
-<p>Данный сайт посвящен развенчанию "теории" лжефизика Виктора Катющика</p>
+var body=[
+   //x(0)y(1)     z(2)vx(3) vy(4)vz(5)mass(6)fixed(7)
+    [0,  0,       0,  0,    0,  0,  333333,  1],
+    [0,  0.39,    0,  1.58, 0,  0,  0.038,   0],
+    [0,  0.72,    0,  1.17, 0,  0,  0.82,    0],
+    [0,  1,       0,  1,    0,  0,  1,       0],
+    [0,  1.00256, 0,  1.03, 0,  0,  0.012,   0],
+    [0,  1.51,    0,  0.8,  0,  0,  0.1,     0],
+    [0,  5.2,     0,  0.43, 0,  0,  317,     0],
+    [0,  9.3,     0,  0.32, 0,  0,  95,      0],
+    [0,  19.3,    0,  0.23, 0,  0,  14.5,    0],
+    [0,  30,      0,  0.18, 0,  0,  16.7,    0]
+];
 
-<p>
-Другие ссылки с критикой непризнанного "гения":
-<ul>
+function step() {
+    var dv_list = [];
+    for (var i = 0; i < body.length; ++i) {
+        var dv = [0, 0, 0];
+        if (body[i][7]) {
+            // fixed point
+            for (var j = 0; j < 3; ++j) {
+                dv[j] = body[i][3+j];
+            }
+            dv_list.push(dv);
+            continue;
+        }
 
-<li>
-<a href="http://torgopt.com.mastertest.ru/lk/index.html">http://torgopt.com.mastertest.ru</a>
-</li>
+        for (var j = 0; j < body.length; ++j) {
+            if (i == j) {
+                continue;
+            }
 
-<li>
-<a href="https://78.ru/articles/2019-05-28/ne_priznayushii_teorii_nyutona_i_einshteina_fizik_vistupil_s_lekciei_v_peterburge">Не признающий теории Ньютона и Эйнштейна физик выступил с лекцией в Петербурге</a>
-</li>
+            var r1 = body[i];
+            var r2 = body[j];
+            var R = 0.0;
+            for (var k = 0; k < 3; ++k) {
+                R += (r1[k]-r2[k])*(r1[k]-r2[k]);
+            }
+            R = Math.sqrt(R);
 
-<li>Критика от физика Андрея Беглова:
-<iframe width="560" height="315" src="https://www.youtube.com/embed/M5W8fkbIGbM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</li>
+            for (var k = 0; k < 3; ++k) {
+                dv[k] += G*body[j][6] * (r2[k]-r1[k]) / R / R / R;
+            }
+        }
+        dv_list.push(dv);
+    }
 
-<li>Критика от Макара Светлого:
-	<iframe width="560" height="315" src="https://www.youtube.com/embed/nZyDvkc3sZ0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</li>
+    // change velocity
+    for (var i = 0; i < body.length; ++i) {
+        if (body[i][7]) {
+            // fixed point
+            continue;
+        }
 
-</ul>
-</p>
+        for (var k = 0; k < 3; ++k) {
+            body[i][3+k] += dt * dv_list[i][k];
+        }
+    }
 
-<p>
-Ресурсы Катющика:<br>
-<a href="http://forum.razum1.ru">форум 1</a>
-<a href="http://razum.wiki">форум 2</a>
-</p>
+    // change coordinates
+    for (var i = 0; i < body.length; ++i) {
+        if (body[i][7]) {
+            // fixed point
+            continue;
+        }
 
-<h1 class="page-heading">Ошибки в писанине Катющика</h1>
+        for (var k = 0; k < 3; ++k) {
+            body[i][k] += dt * body[i][3+k];
+        }
+    }
+}
 
-<p>В статье <a href="http://physlg.net/Phystube/Katyushik.pdf">Гравитационное взаимодействие, основы космологии</a>
-на странице 20 рассматривается вопрос возможности существования орбит на прямом тяготении, на основе Закона всемирного тяготения. При этом формулируется такая задача:</p>
+function draw(w, h) {
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext("2d");
+    var el = null;
 
-<p>
-<code>Рассмотрим силы, приложенные к спутнику.
-С единичным смещением запустим спутник на более низкую орбиту (масса
-- const, линейная скорость const).</code></p>
+    for (var i = 0; i < 5; ++i) {
+        step();
+    }
 
-<p>рассмотриваются графики сил и делается вывод:</p>
+    for (var i = 0; i < body.length; ++i) {
+        for (var j = 0; j < 7; ++j) {
+            el = document.getElementById("input_"+i+"_"+j);
+            el.value = body[i][j];
+        }
+        el = document.getElementById("input_"+i+"_7");
+        el.checked = body[i][7];
+    }
 
-<p>
-<code>Из данных графиков однозначно следует, что еслибы действительно наблюдаемая картина мира была построена на законе тяготения (по версии
-притяжения), то ни какой планетарности не было бы в принципе.(приращение силы направлено строго в противоположную сторону от требуемого ). Тело на таких приращениях силы удерживаться в планетарном режиме не может, и при любом отличном от нуля смещении должно покинуть орбиту (причем не только исходную, но и все остальныетеоретически предполагаемые).
-То есть по факту - по версии прямого тяготения, удержать тело на орбите –
-не возможно. Нет сил обеспечивающих данное явление. Более того, приращения силы делают планетарность по версии прямого притяжения невозможной в принципе.</code></p>
+    ctx.beginPath();
+    ctx.clearRect(0, 0, w, h);
+    for (var i = 0; i < body.length; ++i) {
+        // assume w = h
+        var x = body[i][0]*w/20.0 + w/2.0;
+        var y = body[i][1]*w/20.0 + w/2.0;
+        ctx.moveTo(x, y);
+        ctx.arc(x, y, 1, 0, 2*Math.PI, false);
+    }
+    ctx.stroke();
 
+    if (!Stop) {
+        setTimeout(() => {
+            draw(w, h);
+        }, 100);
+    }
+}
 
-<p>
-Данный вывод неверен и ошибочен по причинам:
-<ul>
-<li>Основной задачей механики является построение траектории тела при заданных начальных условиях, однако поставленная задача поверхностно рассмотрена но не решена до конца ни аналитически ни численно.</li>
-<li>В аналитическом виде движение в центрально-симметричном поле тяготения рассматривается в многочисленной литературе, например, в курсе теоретической физики "Механика" Ландау, Лифшиц, том 1. Где показаны замкнутые орбиты при F=1/r^2</li>
-<li>Подробно рассмотрим численный метод. Дано, ЗВТ, расстояние между телами г, начальная скорость v, масса планеты М, масса спутника m.</li>
-</ul>
-</p>
+function start() {
+    Stop = false;
+    var canvas = document.getElementById("canvas");
+    var el = null;
 
-<img src="img/1.png"/>
+    for (var i = 0; i < body.length; ++i) {
+        for (var j = 0; j < 7; ++j) {
+            el = document.getElementById("input_"+i+"_"+j);
+            body[i][j] = parseFloat(el.value);
+        }
+        el = document.getElementById("input_"+i+"_7");
+        if (el.checked) {
+            body[i][7] = 1;
+        } else {
+            body[i][7] = 0;
+        }
+    }
 
-<p>Видим, что ускорение спутника не зависит от его массы причем при m&lt;&lt;M полностью определяется планетой, которая неподвижна. (Закон Галилея о падении тел).</p>
+    draw(canvas.width, canvas.height);
+}
 
-<img src="img/2.png"/>
+function stop() {
+    Stop = true;
+}
 
-<p>На рисунке зеленая орбита круговая, желтая и красная эллипсы, с начальным смещением по радиусу относительно круговой +- 2000км, начальные скорости у всех одинаковы и равны круговой. Орбиты плоские и замкнуты. Требование масса спутника = const - лишнее, требование линейная скорость = const при изменяющемся радиусе а соответственно действующей силе безосновательно и противоречит как наблюдениям, так и теории. </p>
+function doall() {
+    var el=null;
+    var inputs=document.getElementById("inputs");
+    for (var i = 0; i < body.length; ++i) {
+        for (var j = 0; j < 7; ++j) {
+            el = document.createElement("input");
+            el.value = body[i][j];
+            el.id = "input_"+i+"_"+j;
+            inputs.appendChild(el);
+        }
+        el = document.createElement("input");
+        el.type = "checkbox";
+        el.checked = body[i][7];
+        el.id = "input_"+i+"_7";
+        inputs.append(el);
 
-<p>Программа с исходным кодом: <a href="http://www.glowscript.org/#/user/Mex/folder/Public/program/orbit1">http://www.glowscript.org/#/user/Mex/folder/Public/program/orbit1</a>
+        el = document.createElement("br");
+        inputs.appendChild(el);
+    }
+}
 
-<p>В общем случае нужно учитывать взаимное влияние тел друг на друга. От скоростей и ускорения перейдем к импульсам и силам</p>
-
-<img src="img/3.png"/>
-
-<p>При каждой итерации вычисляется взаимное расстояние R, действующая сила F по ЗВТ, и импульсы Р1 и Р2 от 1 тела на 2 и от 2 на 1 с обратным знаком.</p>
-
-<img src="img/4.png"/>
-
-<p>Программа с исходником: <a href="http://www.glowscript.org/#/user/Mex/folder/Public/program/ZVT3">http://www.glowscript.org/#/user/Mex/folder/Public/program/ZVT3</a>
-Пример модели трех взаимодействующих тел. Орбиты не Кеплеровы, не замкнуты, и не плоские. Однако это уже совсем другой вопрос. </p>
-
-<img src="img/5.png"/>
-
-<p>Вывод, планетарные системы (орбиты) на тяготении по ЗВТ, обоснованы аналитически, численно и согласуются с наблюдениями. 
-Утверждения автора о "невозможности в принципе планетарности по версии прямого тяготения" безосновательны и ошибочны а определения на стр.18 - 19 "планетарного равновесия" интеллектуально не состоятельны.</p>
-
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/M5W8fkbIGbM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-</div>
-
-<!-- Yandex.Metrika counter -->
-<script type="text/javascript" >
-   (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-   m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-   (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
-
-   ym(53663788, "init", {
-        clickmap:true,
-        trackLinks:true,
-        accurateTrackBounce:true
-   });
-</script>
-<noscript><div><img src="https://mc.yandex.ru/watch/53663788" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter -->
-
-
+        </script>
+    </head>
+    <body onload="doall();">
+        <div style="float:left">
+            <canvas id="canvas" width="600" height="600" style="border: 1px solid"></canvas>
+        </div>
+        <div>
+            <form name="params">
+                x;y;z;vx;vy;vz;mass;fixed?
+                <div id="inputs"></div>
+                <input type="button" value="start" onclick="start()"/>
+                <input type="button" value="stop" onclick="stop()"/>
+            </form>
+        </div>
+    </body>
+</html>
