@@ -90,12 +90,16 @@ function draw(w, h) {
     }
 
     for (var i = 0; i < body.length; ++i) {
-        for (var j = 0; j < 7; ++j) {
+        for (var j = 0; j < 6; ++j) {
             el = document.getElementById("input_"+i+"_"+j);
             el.value = body[i][j];
         }
         el = document.getElementById("input_"+i+"_7");
-        el.checked = body[i][7];
+        if (el.checked) {
+            body[i][7] = 1;
+        } else {
+            body[i][7] = 0;
+        }
     }
     el = document.getElementById("zoom");
     Zoom = parseFloat(el.value);
