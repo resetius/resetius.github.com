@@ -165,6 +165,7 @@
                 el = document.createElement("input");
                 el.value = body[i][j];
                 el.id = "input_"+i+"_"+j;
+                el.size = "5";
                 inputs.appendChild(el);
             }
             el = document.createElement("input");
@@ -179,6 +180,7 @@
 
         el = document.getElementById("zoom");
         el.value = Zoom;
+        start();
     }
 
     </script>
