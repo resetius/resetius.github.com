@@ -9,4 +9,177 @@
   <link rel="stylesheet" href="{{ "/css/main.css" | prepend: site.baseurl }}">
   <link rel="canonical" href="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}">
   <link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="{{ "/feed.xml" | prepend: site.baseurl | prepend: site.url }}">
+
+
+  <script>
+    var dt=0.01;
+    var T=8;
+    var G=2.92e-6;
+    var Stop=false;
+    var Zoom=50.0;
+
+    var body=[
+       //x(0)y(1)     z(2)vx(3) vy(4)vz(5)mass(6)fixed(7)
+        [0,  0,       0,  0,    0,  0,  333333,  1],
+        [0,  0.39,    0,  1.58, 0,  0,  0.038,   0],
+        [0,  0.72,    0,  1.17, 0,  0,  0.82,    0],
+        [0,  1,       0,  1,    0,  0,  1,       0],
+        [0,  1.00256, 0,  1.03, 0,  0,  0.012,   0],
+        [0,  1.51,    0,  0.8,  0,  0,  0.1,     0],
+        [0,  5.2,     0,  0.43, 0,  0,  317,     0],
+        [0,  9.3,     0,  0.32, 0,  0,  95,      0],
+        [0,  19.3,    0,  0.23, 0,  0,  14.5,    0],
+        [0,  30,      0,  0.18, 0,  0,  16.7,    0]
+    ];
+
+    function step() {
+        var dv_list = [];
+        for (var i = 0; i < body.length; ++i) {
+            var dv = [0, 0, 0];
+            if (body[i][7]) {
+                // fixed point
+                for (var j = 0; j < 3; ++j) {
+                    dv[j] = body[i][3+j];
+                }
+                dv_list.push(dv);
+                continue;
+            }
+
+            for (var j = 0; j < body.length; ++j) {
+                if (i == j) {
+                    continue;
+                }
+
+                var r1 = body[i];
+                var r2 = body[j];
+                var R = 0.0;
+                for (var k = 0; k < 3; ++k) {
+                    R += (r1[k]-r2[k])*(r1[k]-r2[k]);
+                }
+                R = Math.sqrt(R);
+
+                for (var k = 0; k < 3; ++k) {
+                    dv[k] += G*body[j][6] * (r2[k]-r1[k]) / R / R / R;
+                }
+            }
+            dv_list.push(dv);
+        }
+
+        // change velocity
+        for (var i = 0; i < body.length; ++i) {
+            if (body[i][7]) {
+                // fixed point
+                continue;
+            }
+
+            for (var k = 0; k < 3; ++k) {
+                body[i][3+k] += dt * dv_list[i][k];
+            }
+        }
+
+        // change coordinates
+        for (var i = 0; i < body.length; ++i) {
+            if (body[i][7]) {
+                // fixed point
+                continue;
+            }
+
+            for (var k = 0; k < 3; ++k) {
+                body[i][k] += dt * body[i][3+k];
+            }
+        }
+    }
+
+    function draw(w, h) {
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        var el = null;
+
+        for (var i = 0; i < 5; ++i) {
+            step();
+        }
+
+        for (var i = 0; i < body.length; ++i) {
+            for (var j = 0; j < 6; ++j) {
+                el = document.getElementById("input_"+i+"_"+j);
+                el.value = body[i][j];
+            }
+            el = document.getElementById("input_"+i+"_7");
+            if (el.checked) {
+                body[i][7] = 1;
+            } else {
+                body[i][7] = 0;
+            }
+        }
+        el = document.getElementById("zoom");
+        Zoom = parseFloat(el.value);
+
+        ctx.beginPath();
+        ctx.clearRect(0, 0, w, h);
+        for (var i = 0; i < body.length; ++i) {
+            // assume w = h
+            var x = body[i][0]*w/Zoom + w/2.0;
+            var y = body[i][1]*w/Zoom + w/2.0;
+            ctx.moveTo(x, y);
+            ctx.arc(x, y, 1, 0, 2*Math.PI, false);
+        }
+        ctx.stroke();
+
+        if (!Stop) {
+            setTimeout(() => {
+                draw(w, h);
+            }, 100);
+        }
+    }
+
+    function start() {
+        Stop = false;
+        var canvas = document.getElementById("canvas");
+        var el = null;
+
+        for (var i = 0; i < body.length; ++i) {
+            for (var j = 0; j < 7; ++j) {
+                el = document.getElementById("input_"+i+"_"+j);
+                body[i][j] = parseFloat(el.value);
+            }
+            el = document.getElementById("input_"+i+"_7");
+            if (el.checked) {
+                body[i][7] = 1;
+            } else {
+                body[i][7] = 0;
+            }
+        }
+
+        draw(canvas.width, canvas.height);
+    }
+
+    function stop() {
+        Stop = true;
+    }
+
+    function doall() {
+        var el=null;
+        var inputs=document.getElementById("inputs");
+        for (var i = 0; i < body.length; ++i) {
+            for (var j = 0; j < 7; ++j) {
+                el = document.createElement("input");
+                el.value = body[i][j];
+                el.id = "input_"+i+"_"+j;
+                inputs.appendChild(el);
+            }
+            el = document.createElement("input");
+            el.type = "checkbox";
+            el.checked = body[i][7];
+            el.id = "input_"+i+"_7";
+            inputs.append(el);
+
+            el = document.createElement("br");
+            inputs.appendChild(el);
+        }
+
+        el = document.getElementById("zoom");
+        el.value = Zoom;
+    }
+
+    </script>
 </head>
